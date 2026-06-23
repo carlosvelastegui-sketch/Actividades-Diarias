@@ -271,7 +271,7 @@ async function probarConexion() {
 function today() { return new Date().toISOString().split('T')[0]; }
 function daysUntil(d) { if(!d) return null; return Math.ceil((new Date(d)-new Date(today()))/86400000); }
 function fmtDate(d) { if(!d||d==='') return '—'; try { const clean=String(d).split('T')[0]; const [y,m,day]=clean.split('-'); return `${day}/${m}/${y}`; } catch(e){ return d; } }
-function fmtTiempo(h) { if(!h||isNaN(h)||parseFloat(h)<=0) return ''; const v=parseFloat(h); return v<24?`${v}h`:`${Math.round(v/24*10)/10}d`; }
+function fmtTiempo(h) { if(!h||h==='') return ''; const s=String(h).trim(); if(s.endsWith('h')||s.endsWith('d')) return s; const v=parseFloat(s); if(isNaN(v)||v<=0) return ''; return v<24?`${v}h`:`${Math.round(v/24*10)/10}d`; }
 
 function getPlazo(act) {
   if (act.Estado==='Terminado') return {label:'Completado',color:'#3fb950',icon:'✅',type:'completo'};
