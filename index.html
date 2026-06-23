@@ -205,6 +205,7 @@ textarea.fs{resize:vertical;min-height:70px}
       <div class="field"><label class="lbl">Fecha de inicio</label><input type="date" id="fFechaInicio"></div>
       <div class="field"><label class="lbl">Fecha máxima de ejecución</label><input type="date" id="fFechaMaxima"></div>
     </div>
+    <div class="field"><label class="lbl">⏱ Tiempo de ejecución (horas)</label><input type="number" class="fs" id="fTiempoEjecucion" placeholder="ej: 2.5 — se mostrará en horas si &lt;24h, en días si es mayor" min="0" step="0.5" style="max-width:340px"></div>
     <div class="notas-section" id="notasSection" style="display:none">
       <h4>📝 Notas de seguimiento</h4>
       <div id="notasLista"></div>
@@ -270,6 +271,7 @@ async function probarConexion() {
 function today() { return new Date().toISOString().split('T')[0]; }
 function daysUntil(d) { if(!d) return null; return Math.ceil((new Date(d)-new Date(today()))/86400000); }
 function fmtDate(d) { if(!d||d==='') return '—'; try { const clean=String(d).split('T')[0]; const [y,m,day]=clean.split('-'); return `${day}/${m}/${y}`; } catch(e){ return d; } }
+function fmtTiempo(h) { if(!h||isNaN(h)||parseFloat(h)<=0) return ''; const v=parseFloat(h); return v<24?`${v}h`:`${Math.round(v/24*10)/10}d`; }
 
 function getPlazo(act) {
   if (act.Estado==='Terminado') return {label:'Completado',color:'#3fb950',icon:'✅',type:'completo'};
@@ -324,7 +326,7 @@ function renderTabla() {
   });
   const wrap=document.getElementById('tablaWrap');
   if (!data.length){wrap.innerHTML=`<div class="empty"><div class="emoji">📋</div><p>Sin actividades${actividades.length?' con esos filtros':''}</p></div>`;return;}
-  wrap.innerHTML=`<table><thead><tr><th>Mes</th><th>Área</th><th>Título</th><th>Tipo</th><th>Estado</th><th>Notas</th><th>Inicio</th><th>Máximo</th><th>Plazo</th><th>Acciones</th></tr></thead>
+  wrap.innerHTML=`<table><thead><tr><th>Mes</th><th>Área</th><th>Título</th><th>Tipo</th><th>Estado</th><th>Notas</th><th>Inicio</th><th>Máximo</th><th>⏱ Tiempo</th><th>Plazo</th><th>Acciones</th></tr></thead>
   <tbody>${data.map(a=>{
     const eb=estadoBadge(a.Estado),ps=getPlazo(a);
     const tipoIcon={'Correo electrónico':'📧','Excel':'📊','WhatsApp':'💬','Web':'🌐','Presencial':'🤝','Ninguno':'—'};
@@ -348,6 +350,7 @@ function renderTabla() {
       <td style="min-width:200px;max-width:260px">${notasHtml}</td>
       <td style="font-size:11px;white-space:nowrap">${fmtDate(a.FechaInicio)}</td>
       <td style="font-size:11px;white-space:nowrap">${fmtDate(a.FechaMaxima)}</td>
+      <td style="font-size:11px;white-space:nowrap;color:#4338CA;font-weight:600">${fmtTiempo(a.TiempoEjecucion)||'—'}</td>
       <td><span class="plazo-badge" style="background:${ps.color}22;color:${ps.color}">${ps.icon} ${ps.label}</span></td>
       <td><div style="display:flex;gap:4px">
         <button class="btn-icon" onclick="openModal('edit','${a.ID}')" title="Editar">✏️</button>
@@ -577,6 +580,7 @@ function openModal(mode, id) {
     document.getElementById('fEstado').value='Pendiente';
     document.getElementById('fFechaInicio').value=today();
     document.getElementById('fFechaMaxima').value='';
+    document.getElementById('fTiempoEjecucion').value='';
   } else {
     const a=actividades.find(x=>x.ID===id);
     if (!a) return;
@@ -589,6 +593,7 @@ function openModal(mode, id) {
     document.getElementById('fDetalle').value=a.Detalle||'';
     document.getElementById('fFechaInicio').value=a.FechaInicio||'';
     document.getElementById('fFechaMaxima').value=a.FechaMaxima||'';
+    document.getElementById('fTiempoEjecucion').value=a.TiempoEjecucion||'';
     renderNotas(a);
   }
   document.getElementById('modalOverlay').classList.add('open');
@@ -622,6 +627,7 @@ async function guardarActividad() {
     Detalle: document.getElementById('fDetalle').value.trim(),
     FechaInicio: document.getElementById('fFechaInicio').value,
     FechaMaxima: document.getElementById('fFechaMaxima').value,
+    TiempoEjecucion: document.getElementById('fTiempoEjecucion').value,
   };
   if (editId) params.ID = editId;
 
